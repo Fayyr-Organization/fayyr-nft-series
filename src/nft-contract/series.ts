@@ -12,9 +12,6 @@ export function internalMint({
     id: number,
     receiverId: string
 }): void {
-    //measure the initial storage being used on the contract TODO
-    let initialStorageUsage = near.storageUsage();
-
     let predecessor = near.predecessorAccountId();
     if(predecessor != near.currentAccountId()) {
         assert(contract.approvedMinters.contains(predecessor), "Not approved minter");
@@ -75,12 +72,6 @@ export function internalMint({
     
     // Log the json.
     near.log(`EVENT_JSON:${JSON.stringify(nftMintLog)}`);
-
-    //calculate the required storage which was the used - initial TODO
-    let requiredStorageInBytes = near.storageUsage().valueOf() - initialStorageUsage.valueOf();
-
-    //refund any excess storage if the user attached too much. Panic if they didn't attach enough to cover the required.
-    refundDeposit(requiredStorageInBytes);
 }
 
 export function internalCreateSeries({
