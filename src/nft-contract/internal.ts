@@ -149,12 +149,12 @@ export function internalTransfer(contract: Contract, senderId: string, receiverI
 
     //we create a new token struct 
     let newToken = new Token ({
-        ownerId: receiverId,
+        series_id: token.series_id,
+        owner_id: receiverId,
         //reset the approval account IDs
+        // @ts-ignore
         approvedAccountIds: {},
         nextApprovalId: token.next_approval_id,
-        //we copy over the royalties from the previous token
-        royalty: token.royalty,
     });
 
     //insert that new token into the tokens_by_id, replacing the old entry 

@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { near, UnorderedSet } from "near-sdk-js";
 import { Contract, NFT_METADATA_SPEC, NFT_STANDARD_NAME } from ".";
 import { restoreOwners } from "./internal";
-import { JsonSeries, JsonToken } from "./metadata";
+import { JsonSeries, JsonToken, Series } from "./metadata";
 import { internalNftToken } from "./nft_core";
 
 //Query for the total supply of NFTs on the contract
@@ -129,7 +128,8 @@ export function internalSeries({
     // Paginate through the keys using the fromIndex and limit
     for (let i = start; i < keys.length && i < start + max; i++) {
         // get the token object from the keys
-        let jsonToken = internalSeriesInfo({contract, tokenId: keys[i][0]});
+        // @ts-ignore
+        let jsonToken = internalSeriesInfo({contract, id: keys[i][0]});
         tokens.push(jsonToken);
     }
     return tokens;
@@ -143,6 +143,7 @@ export function internalSeriesInfo({
     contract: Contract, 
     id: number 
 }) {
+    // @ts-ignore
     let series = contract.seriesById.get(id) as Series;
     //if there wasn't a series in the seriesById collection, we return None
     if (series == null) {
@@ -154,7 +155,7 @@ export function internalSeriesInfo({
         seriesId: id,
         metadata: series.metadata,
         royalty: series.royalty,
-        ownerId: series.ownerId
+        ownerId: series.owner_id
     });
     return jsonSeries;
 }
@@ -167,6 +168,7 @@ export function internalNftSupplyForSeries({
     contract: Contract, 
     id: number 
 }) {
+    // @ts-ignore
     let series = contract.seriesById.get(id) as Series;
     //if there wasn't a series in the seriesById collection, we return None
     if (series == null) {
@@ -188,6 +190,7 @@ export function internalNftTokensForSeries({
     fromIndex?: string, 
     limit?: number
 }): JsonToken[] {
+    // @ts-ignore
     let series = contract.seriesById.get(id) as Series;
     //if there wasn't a series in the seriesById collection, we return None
     if (series == null) {

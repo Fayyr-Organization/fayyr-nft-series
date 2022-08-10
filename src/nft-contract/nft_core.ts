@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { assert, bytes, near } from "near-sdk-js";
 import { Contract, NFT_METADATA_SPEC, NFT_STANDARD_NAME } from ".";
 import { assertOneYocto, internalAddTokenToOwner, internalRemoveTokenFromOwner, internalTransfer, refundDeposit, refundApprovedAccountIds } from "./internal";
-import { JsonToken, Token, TokenMetadata } from "./metadata";
+import { JsonToken, Series, Token, TokenMetadata } from "./metadata";
 
 const GAS_FOR_RESOLVE_TRANSFER = 40_000_000_000_000;
 const GAS_FOR_NFT_ON_TRANSFER = 35_000_000_000_000;
@@ -16,23 +15,32 @@ export function internalNftToken({
     tokenId: string 
 }) {
     let token = contract.tokensById.get(tokenId) as Token;
-    //if there wasn't a token ID in the tokens_by_id collection, we return None
     if (token == null) {
-        return null;
+        near.panic("no token");
+    }
+    // @ts-ignore
+    let curSeries = contract.seriesById.get(token.series_id) as Series;
+    if (curSeries == null) {
+        near.panic("no series");
+    }
+    let metadata = curSeries.metadata;
+    let editionNumber = tokenId.split(":")[1];
+
+    if (metadata.title != null) {
+        metadata.title = `${metadata.title} - ${editionNumber}`;
+    } else {
+        metadata.title = `Series ${token.series_id} : Edition ${editionNumber}`;
     }
 
-    //if there is some token ID in the tokens_by_id collection
-    //we'll get the metadata for that token
-    let metadata = contract.tokenMetadataById.get(tokenId) as TokenMetadata;
-    
-    //we return the JsonToken
     let jsonToken = new JsonToken({
+        seriesId: token.series_id,
         tokenId: tokenId,
+        metadata: metadata,
         ownerId: token.owner_id,
-        metadata,
         approvedAccountIds: token.approved_account_ids,
-        royalty: token.royalty
+        royalty: curSeries.royalty
     });
+
     return jsonToken;
 }
 

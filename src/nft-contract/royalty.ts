@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { assert, near } from "near-sdk-js";
 import { Contract, NFT_METADATA_SPEC, NFT_STANDARD_NAME } from ".";
 import { assertAtLeastOneYocto, assertOneYocto, bytesForApprovedAccountId, internalAddTokenToOwner, internalTransfer, refundDeposit, refundApprovedAccountIds, refundApprovedAccountIdsIter, royaltyToPayout } from "./internal";
-import { Token } from "./metadata";
+import { Series, Token } from "./metadata";
 
 //calculates the payout for a token given the passed in balance. This is a view method
 export function internalNftPayout({
@@ -28,8 +27,13 @@ export function internalNftPayout({
     let totalPerpetual = 0;
     //keep track of the payout object to send back
     let payoutObj: { [key: string]: string } = {};
+    // @ts-ignore
+    let curSeries = contract.seriesById.get(token.series_id) as Series;
+    if (curSeries == null) {
+        near.panic("no series");
+    }
     //get the royalty object from token
-    let royalty = token.royalty;
+    let royalty = curSeries.royalty;
 
     //make sure we're not paying out to too many people (GAS limits this)
     assert(Object.keys(royalty).length <= maxLenPayout, "Market cannot payout to that many receivers");
@@ -96,8 +100,13 @@ export function internalNftTransferPayout({
     let totalPerpetual = 0;
     //keep track of the payout object to send back
     let payoutObj: { [key: string]: string } = {};
+    // @ts-ignore
+    let curSeries = contract.seriesById.get(token.series_id) as Series;
+    if (curSeries == null) {
+        near.panic("no series");
+    }
     //get the royalty object from token
-    let royalty = previousToken.royalty;
+    let royalty = curSeries.royalty;
 
     //make sure we're not paying out to too many people (GAS limits this)
     assert(Object.keys(royalty).length <= maxLenPayout, "Market cannot payout to that many receivers");

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { assert, near, UnorderedSet } from "near-sdk-js";
 import { Contract, NFT_METADATA_SPEC, NFT_STANDARD_NAME } from ".";
 import { internalAddTokenToOwner, refundDeposit } from "./internal";
@@ -19,7 +18,8 @@ export function internalMint({
     let predecessor = near.predecessorAccountId();
     assert(contract.approvedMinters.contains(predecessor), "Not approved minter");
     
-    let series = contract.series.get(id);
+    // @ts-ignore
+    let series = contract.seriesById.get(id) as Series;
     if (series == null) {
         near.panic("no series");
     }
@@ -30,22 +30,23 @@ export function internalMint({
     }
 
     let tokenId = `${id}:${curLen + 1}`;
-    series.tokens.insert(tokenId);
-    contract.series.set(id, series);
+    series.tokens.set(tokenId);
+    // @ts-ignore
+    contract.seriesById.set(id, series);
 
     //specify the token struct that contains the owner ID 
     let token = new Token ({
-        seriesId: id,
+        series_id: id,
         //set the owner ID equal to the receiver ID passed into the function
-        ownerId: receiverId,
+        owner_id: receiverId,
         //we set the approved account IDs to the default value (an empty map)
-        approvedAccountIds: {},
+        approved_account_ids: {},
         //the next approval ID is set to 0
-        nextApprovalId: 0
+        next_approval_id: 0
     });
 
     //insert the token ID and token struct and make sure that the token doesn't exist
-    assert(!contract.tokensById.containsKey(tokenId), "Token already exists");
+    assert(contract.tokensById.get(tokenId) != null, "Token already exists");
     contract.tokensById.set(tokenId, token)
 
     //call the internal method for adding the token to the owner
@@ -95,6 +96,7 @@ export function internalCreateSeries({
 
     let predecessor = near.predecessorAccountId();
     assert(contract.approvedCreators.contains(predecessor), "Not approved creator");
+    // @ts-ignore
     assert(contract.seriesById.get(id) == null, "Series already exists");
     let series = new Series({
         metadata,
@@ -102,6 +104,7 @@ export function internalCreateSeries({
         tokens: new UnorderedSet(`${id}${predecessor}`),
         ownerId: predecessor
     });
+    // @ts-ignore
     contract.seriesById.set(id, series);
 
     //calculate the required storage which was the used - initial TODO
@@ -121,12 +124,16 @@ export function internalUpdateSeriesId({
     newId: number
 }): void {
     let caller = near.predecessorAccountId();
+    // @ts-ignore
     let series = contract.seriesById.get(currentId) as Series;
     if (series == null) {
         near.panic("no series");
     }
     assert(series.owner_id == caller, "Not owner");
+    // @ts-ignore
     assert(contract.seriesById.get(newId) == null, "New Series already exists");
+    // @ts-ignore
     contract.seriesById.remove(currentId);
+    // @ts-ignore
     contract.seriesById.set(newId, series);
 }

@@ -1,4 +1,3 @@
-
 import { NearContract, NearBindgen, near, call, view, LookupMap, UnorderedMap, Vector, UnorderedSet, LookupSet } from 'near-sdk-js'
 import { NFTContractMetadata, Token, TokenMetadata, internalNftMetadata } from './metadata';
 import { internalCreateSeries, internalMint, internalUpdateSeriesId } from './series';
@@ -20,7 +19,7 @@ export class Contract extends NearContract {
     approvedMinters: LookupSet;
     approvedCreators: LookupSet;
     seriesById: UnorderedMap;
-    tokensById: LookupMap;
+    tokensById: UnorderedMap;
     tokensPerOwner: LookupMap;
     metadata: NFTContractMetadata;
 
@@ -43,7 +42,7 @@ export class Contract extends NearContract {
         this.approvedCreators = new LookupSet("approvedCreators");
         this.seriesById = new UnorderedMap("seriesById");
         this.tokensPerOwner = new LookupMap("tokensPerOwner");
-        this.tokensById = new LookupMap("tokensById");
+        this.tokensById = new UnorderedMap("tokensById");
         this.metadata = metadata;
     }
 
