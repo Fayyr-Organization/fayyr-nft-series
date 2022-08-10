@@ -175,7 +175,8 @@ export function internalNftSupplyForSeries({
         return 0;
     }
 
-    return series.tokens.len();
+    let tokens = UnorderedSet.deserialize(series.tokens as UnorderedSet);
+    return tokens.len();
 }
 
 // Paginate through all the tokens for a series
@@ -202,14 +203,15 @@ export function internalNftTokensForSeries({
     //take the first "limit" elements in the array. If we didn't specify a limit, use 50
     let max = limit ? limit : 50;
 
-    let keys = series.tokens.toArray();
-    let tokens: JsonToken[] = []
+    let tokens = UnorderedSet.deserialize(series.tokens as UnorderedSet);
+    let keys = tokens.toArray();
+    let jsonTokens: JsonToken[] = []
     for(let i = start; i < max; i++) {
         if(i >= keys.length) {
             break;
         }
         let token = internalNftToken({contract, tokenId: keys[i]});
-        tokens.push(token);
+        jsonTokens.push(token);
     }
-    return tokens;
+    return jsonTokens;
 }

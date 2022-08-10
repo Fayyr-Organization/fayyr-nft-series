@@ -1083,7 +1083,11 @@ function internalMint({
   //measure the initial storage being used on the contract TODO
   let initialStorageUsage = storageUsage();
   let predecessor = predecessorAccountId();
-  assert(contract.approvedMinters.contains(predecessor), "Not approved minter"); // @ts-ignore
+
+  if (predecessor != currentAccountId()) {
+    assert(contract.approvedMinters.contains(predecessor), "Not approved minter");
+  } // @ts-ignore
+
 
   let series = contract.seriesById.get(id);
 
@@ -1091,14 +1095,16 @@ function internalMint({
     panic("no series");
   }
 
-  let curLen = series.tokens.len();
+  let tokens = UnorderedSet.deserialize(series.tokens);
+  let curLen = tokens.len();
 
   if (series.metadata.copies != null) {
     assert(curLen < series.metadata.copies, "Series is full");
   }
 
   let tokenId = `${id}:${curLen + 1}`;
-  series.tokens.set(tokenId); // @ts-ignore
+  tokens.set(tokenId);
+  series.tokens = tokens; // @ts-ignore
 
   contract.seriesById.set(id, series); //specify the token struct that contains the owner ID 
 
@@ -1112,7 +1118,7 @@ function internalMint({
     next_approval_id: 0
   }); //insert the token ID and token struct and make sure that the token doesn't exist
 
-  assert(contract.tokensById.get(tokenId) != null, "Token already exists");
+  assert(contract.tokensById.get(tokenId) == null, "Token already exists");
   contract.tokensById.set(tokenId, token); //call the internal method for adding the token to the owner
 
   internalAddTokenToOwner(contract, token.owner_id, tokenId); // Construct the mint log as per the events standard.
@@ -1147,7 +1153,11 @@ function internalCreateSeries({
   //measure the initial storage being used on the contract TODO
   let initialStorageUsage = storageUsage();
   let predecessor = predecessorAccountId();
-  assert(contract.approvedCreators.contains(predecessor), "Not approved creator"); // @ts-ignore
+
+  if (predecessor != currentAccountId()) {
+    assert(contract.approvedMinters.contains(predecessor), "Not approved minter");
+  } // @ts-ignore
+
 
   assert(contract.seriesById.get(id) == null, "Series already exists");
   let series = new Series({
@@ -1512,7 +1522,8 @@ function internalNftSupplyForSeries({
     return 0;
   }
 
-  return series.tokens.len();
+  let tokens = UnorderedSet.deserialize(series.tokens);
+  return tokens.len();
 } // Paginate through all the tokens for a series
 
 function internalNftTokensForSeries({
@@ -1532,8 +1543,9 @@ function internalNftTokensForSeries({
   let start = fromIndex ? parseInt(fromIndex) : 0; //take the first "limit" elements in the array. If we didn't specify a limit, use 50
 
   let max = limit ? limit : 50;
-  let keys = series.tokens.toArray();
-  let tokens = [];
+  let tokens = UnorderedSet.deserialize(series.tokens);
+  let keys = tokens.toArray();
+  let jsonTokens = [];
 
   for (let i = start; i < max; i++) {
     if (i >= keys.length) {
@@ -1544,10 +1556,10 @@ function internalNftTokensForSeries({
       contract,
       tokenId: keys[i]
     });
-    tokens.push(token);
+    jsonTokens.push(token);
   }
 
-  return tokens;
+  return jsonTokens;
 }
 
 const GAS_FOR_NFT_ON_APPROVE = 35_000_000_000_000; //approve an account ID to transfer a token on your behalf

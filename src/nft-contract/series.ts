@@ -16,21 +16,24 @@ export function internalMint({
     let initialStorageUsage = near.storageUsage();
 
     let predecessor = near.predecessorAccountId();
-    assert(contract.approvedMinters.contains(predecessor), "Not approved minter");
+    if(predecessor != near.currentAccountId()) {
+        assert(contract.approvedMinters.contains(predecessor), "Not approved minter");
+    }
     
     // @ts-ignore
     let series = contract.seriesById.get(id) as Series;
     if (series == null) {
         near.panic("no series");
     }
-
-    let curLen = series.tokens.len();
+    let tokens = UnorderedSet.deserialize(series.tokens as UnorderedSet);
+    let curLen = tokens.len();
     if(series.metadata.copies != null) {
         assert(curLen < series.metadata.copies, "Series is full");
     }
 
     let tokenId = `${id}:${curLen + 1}`;
-    series.tokens.set(tokenId);
+    tokens.set(tokenId);
+    series.tokens = tokens;
     // @ts-ignore
     contract.seriesById.set(id, series);
 
@@ -46,7 +49,7 @@ export function internalMint({
     });
 
     //insert the token ID and token struct and make sure that the token doesn't exist
-    assert(contract.tokensById.get(tokenId) != null, "Token already exists");
+    assert(contract.tokensById.get(tokenId) == null, "Token already exists");
     contract.tokensById.set(tokenId, token)
 
     //call the internal method for adding the token to the owner
@@ -95,7 +98,9 @@ export function internalCreateSeries({
     let initialStorageUsage = near.storageUsage();
 
     let predecessor = near.predecessorAccountId();
-    assert(contract.approvedCreators.contains(predecessor), "Not approved creator");
+    if(predecessor != near.currentAccountId()) {
+        assert(contract.approvedMinters.contains(predecessor), "Not approved minter");
+    }
     // @ts-ignore
     assert(contract.seriesById.get(id) == null, "Series already exists");
     let series = new Series({
