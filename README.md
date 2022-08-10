@@ -1,0 +1,3 @@
+"metadata", {"title": "Eth Toronto JS SDK Launch", "description": "Thank you for supporting our JavaScript launch at Eth Toronto!", "media": "https://bafybeihnb36l3xvpehkwpszthta4ic6bygjkyckp5cffxvszbcltzyjcwi.ipfs.nftstorage.link/", "copies": 400}
+
+"metadata": {"title": "My Non Fungible Team Token", "description": "The Team Most Certainly Goes :)", "media": "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqyhrdzlhvpt33dyjivufqusq.ipfs.dweb.link/goteam-gif.gif"}
